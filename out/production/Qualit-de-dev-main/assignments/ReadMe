@@ -1,0 +1,14 @@
+Les deux fichiers Assignment102.java et Pi.java calculent une estimation de Pi avec la méthode Monte-Carlo.
+
+Assignment102 le calcule en utilisant la programmation parrallèle.
+    Le code cherche d'abord à savoir combien de processeurs sont disponibles sur la machine, ici en l'occurence c'est 8.
+    Puis il les place dans une queue et les lance en leur donnant la tache d'incrémenter un AtomicInteger si le point est bien dans la cible.
+    Une fois tous les processeurs lancés l'estimation de Pi est calculé.
+
+Pi le calcule en utilisant Master/Worker.
+    Le Master stocke les workers dans une liste "tasks" de Callable.
+    Puis il les appelle en utilisant invokeAll() et récupère ce que renvoie les workers pour calculer Pi.
+
+Les différences notables sont que pour Assignments le nombre de processeurs est limité par la machine
+alors que Pi peut appeler un nombre beaucoup plus important de Workers, ce qui le rend plus rapide à l'execution.
+Pi renvoie aussi en moyenne un résultat plus précis.
