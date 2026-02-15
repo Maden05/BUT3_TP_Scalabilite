@@ -56,15 +56,6 @@ class MasterOG {
 
         long stopTime = System.nanoTime();
 
-        try (FileWriter fw = new FileWriter ("results.csv", true)) {
-            fw.write (
-                    totalCount * numWorkers + "," +
-                            numWorkers +"," +
-                            (stopTime - startTime) + '\n'
-            );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         System.out.println("\nPi = " + pi);
         System.out.println("Error = " + (pi - Math.PI));
         System.out.println("Time (ns) = " + (stopTime - startTime));

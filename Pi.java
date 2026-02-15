@@ -22,7 +22,7 @@ public class Pi {
 
 
         int totalCount = N_TOTAL/w;
-        total = new MasterOG().doRun(totalCount, w);
+        total = new Master().doRun(totalCount, w);
         System.out.println("total from Master = " + total);
 
     }
@@ -40,7 +40,7 @@ class Master {
         // Create a collection of tasks
         List<Callable<Long>> tasks = new ArrayList<>();
         for (int i = 0; i < numWorkers; ++i) {
-            tasks.add(new WorkerOG(totalCount));
+            tasks.add(new Worker(totalCount));
         }
 
         // Run them and receive a collection of Futures

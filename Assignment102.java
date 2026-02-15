@@ -1,6 +1,8 @@
 // Estimate the value of Pi using Monte-Carlo Method, using parallel program
 package assignments;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,24 +10,45 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Assignment102 {
 
-    public static void main(String[] args) {
-        PiMonteCarlo PiVal = new PiMonteCarlo(100000);
-        long startTime = System.currentTimeMillis();
-        double value = PiVal.getPi();
-        long stopTime = System.currentTimeMillis();
+  //Scalabilité Forte
+public static void main(String[] args) {
+    int N_TOTAL = 16000000;
 
-        System.out.println("Approx value:" + value);
-        System.out.println("Difference to exact value of pi: " + (value - Math.PI));
-        System.out.println("Error: " + (value - Math.PI) / Math.PI * 100 + " %");
-        System.out.println("Available processors: " + Runtime.getRuntime().availableProcessors());
-        System.out.println("Time Duration: " + (stopTime - startTime) + "ms");
+    // Nombre max de threads disponibles sur la machine
+    int nThreadsMax = Runtime.getRuntime().availableProcessors();
+    System.out.println("Processeurs logiques disponibles : " + nThreadsMax);
+
+    // nb de proces
+    int p = 8; // Exemple : 1,2,4,8 ou nThreadsMax
+
+    int nThrowsPerThread = N_TOTAL ; //N_TOTAL / p si on veut la forte
+
+    PiMonteCarlo pi = new PiMonteCarlo(nThrowsPerThread, p);
+    long startTime = System.currentTimeMillis();
+    double value = pi.getPi();
+    long stopTime = System.currentTimeMillis();
+
+    long duration = stopTime - startTime;
+
+    // Écriture automatique dans le CSV
+    try (FileWriter fw = new FileWriter("assigmentFaible.csv", true)) {
+        fw.write(N_TOTAL + "," + p + "," + duration + "\n");
+    } catch (IOException e) {
+        throw new RuntimeException(e);
     }
+
+    System.out.println("Threads: " + p + " | Pi approx: " + value + " | Durée: " + duration + " ms");
 }
+}
+
+
+
 
 class PiMonteCarlo {
     AtomicInteger nAtomSuccess;
     int nThrows;
     double value;
+    int nbThreads;
 
     class MonteCarlo implements Runnable {
         @Override
@@ -37,10 +60,11 @@ class PiMonteCarlo {
         }
     }
 
-    public PiMonteCarlo(int i) {
+    // Pour scalabilité forte (int nThrowsPerThread, int nbThreads)
+    public PiMonteCarlo(int nThrowsPerThread, int nbThreads) {
         this.nAtomSuccess = new AtomicInteger(0);
-        this.nThrows = i;
-        this.value = 0;
+        this.nThrows = nThrowsPerThread;
+        this.nbThreads = nbThreads;
     }
 
     public double getPi() {
