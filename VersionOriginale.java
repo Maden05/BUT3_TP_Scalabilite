@@ -8,23 +8,20 @@ import java.util.Random;
 import java.util.concurrent.*;
 
 /**
- * Approximates PI using the Monte Carlo method.  Demonstrates
+ * Approximates PI using the Monte Carlo method. Demonstrates
  * use of Callables, Futures, and thread pools.
  */
-public class Pi {
+class PiOG {
     public static void main(String[] args) throws Exception {
 
         long total;
-        //int[] workersList = {1, 2, 4, 6, 8, 12};
-        int w = 8;
-        //int repetitions = 10;
-        int N_TOTAL = 16000000;
+        int workers = 4;          // nombre de threads
+        int N_TOTAL = 10000000;   // nombre total de points
 
+        int totalCount = N_TOTAL / workers;
+        total = new MasterOG().doRun(totalCount, workers);
 
-        int totalCount = N_TOTAL/w;
-        total = new MasterOG().doRun(totalCount, w);
-        System.out.println("total from Master = " + total);
-
+        System.out.println("Total from Master = " + total);
     }
 }
 
@@ -32,8 +29,9 @@ public class Pi {
  * Creates workers to run the Monte Carlo simulation
  * and aggregates the results.
  */
-class Master {
-    public long doRun(int totalCount, int numWorkers) throws InterruptedException, ExecutionException, IOException {
+class MasterOG {
+    public long doRun(int totalCount, int numWorkers)
+            throws InterruptedException, ExecutionException {
 
         long startTime = System.nanoTime();
 
@@ -46,35 +44,30 @@ class Master {
         // Run them and receive a collection of Futures
         ExecutorService exec = Executors.newFixedThreadPool(numWorkers);
         List<Future<Long>> results = exec.invokeAll(tasks);
+
         long total = 0;
 
-        // Assemble the results.
+        // Assemble the results
         for (Future<Long> f : results) {
-            // Call to get() is an implicit barrier.  This will block
-            // until result from corresponding worker is ready.
-            total += f.get();
+            total += f.get(); // barrière implicite
         }
+
         double pi = 4.0 * total / totalCount / numWorkers;
 
         long stopTime = System.nanoTime();
 
-        try (FileWriter fw = new FileWriter("results.csv", true)) {
-            fw.write(
+        try (FileWriter fw = new FileWriter ("results.csv", true)) {
+            fw.write (
                     totalCount * numWorkers + "," +
-                            numWorkers + "," +
-                            (stopTime - startTime) + "\n"
+                            numWorkers +"," +
+                            (stopTime - startTime) + '\n'
             );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        System.out.println("\nPi : " + pi);
-        double errorPi = (pi - Math.PI);
-        System.out.println("Error: " + errorPi + "\n");
-
-        System.out.println("Ntot: " + totalCount * numWorkers);
-        System.out.println("Available processors: " + numWorkers);
-        System.out.println("Time Duration (ns): " + (stopTime - startTime) + "\n");
-
-        System.out.println(errorPi + " " + totalCount * numWorkers + " " + numWorkers + " " + (stopTime - startTime));
+        System.out.println("\nPi = " + pi);
+        System.out.println("Error = " + (pi - Math.PI));
+        System.out.println("Time (ns) = " + (stopTime - startTime));
 
         exec.shutdown();
         return total;
@@ -84,10 +77,10 @@ class Master {
 /**
  * Task for running the Monte Carlo simulation.
  */
-class Worker implements Callable<Long> {
+class WorkerOG implements Callable<Long> {
     private final int numIterations;
 
-    public Worker(int num) {
+    public WorkerOG(int num) {
         this.numIterations = num;
     }
 
@@ -95,10 +88,13 @@ class Worker implements Callable<Long> {
     public Long call() {
         long circleCount = 0;
         Random prng = new Random();
+
         for (int j = 0; j < numIterations; j++) {
             double x = prng.nextDouble();
             double y = prng.nextDouble();
-            if ((x * x + y * y) < 1) ++circleCount;
+
+            if ((x * x + y * y) < 1)
+                ++circleCount;
         }
         return circleCount;
     }
